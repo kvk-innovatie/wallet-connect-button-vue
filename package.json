@@ -1,0 +1,52 @@
+{
+  "name": "wallet-connect-button-vue",
+  "version": "1.0.3",
+  "description": "A Vue 3 component for NL Wallet integration",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "lint": "eslint src --ext .ts,.vue",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "nl-wallet",
+    "component",
+    "wallet",
+    "button"
+  ],
+  "author": "Michiel Mayer",
+  "license": "MIT",
+  "peerDependencies": {
+    "vue": "^3.0.0",
+    "axios": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vue": "^3.0.0",
+    "@vue/compiler-sfc": "^3.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "rollup": "^4.0.0",
+    "typescript": "^5.0.0",
+    "tslib": "^2.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kvk-innovatie/wallet-connect-button-vue.git"
+  },
+  "homepage": "https://github.com/kvk-innovatie/wallet-connect-button-vue"
+}
