@@ -87,7 +87,7 @@ const fetchDisclosedAttributes = async () => {
   if (!session_token) return;
 
   loading.value = true;
-  const baseUrl = apiKey ? (props.walletConnectHost || "https://wallet-connect.eu") : "";
+  const baseUrl = props.apiKey ? (props.walletConnectHost || "https://wallet-connect.eu") : "";
   let url = baseUrl + `/api/disclosed-attributes?session_token=${session_token}&client_id=${props.clientId}`;
   if (nonce) url = `${url}&nonce=${nonce}`;
 
