@@ -19,7 +19,7 @@
     :text="props.label"
     :usecase="clientId"
     :start-url="startUrl"
-    lang="nl"
+    :lang="props.lang"
   ></nl-wallet-button>
 </template>
 
@@ -33,7 +33,8 @@ const props = defineProps({
   clientId: { type: String, required: true },
   onSuccess: { type: Function, required: true },
   apiKey: { type: String, required: false },
-  walletConnectHost: { type: String, required: false }
+  walletConnectHost: { type: String, required: false },
+  lang: { type: String, required: false, default: 'nl' }
 });
 
 const { searchParams, setSearchParams, removeSearchParam } = useSearchParams();
@@ -44,7 +45,7 @@ const buttonRef = ref(null);
 const startUrl = computed(() => {
   const baseUrl = props.walletConnectHost || 'https://wallet-connect.eu';
   const returnUrl = typeof window !== 'undefined' ? window.location.href : '';
-  return `${baseUrl}/create-session?lang=en&return_url=${encodeURIComponent(returnUrl)}`;
+  return `${baseUrl}/api/create-session?lang=en&return_url=${encodeURIComponent(returnUrl)}`;
 });
 
 const handleSuccess = (e) => {
@@ -86,8 +87,8 @@ const fetchDisclosedAttributes = async () => {
   if (!session_token) return;
 
   loading.value = true;
-  const baseUrl = props.walletConnectHost || "https://wallet-connect.eu";
-  let url = baseUrl + `/disclosed-attributes?session_token=${session_token}&client_id=${props.clientId}`;
+  const baseUrl = apiKey ? (props.walletConnectHost || "https://wallet-connect.eu") : "";
+  let url = baseUrl + `/api/disclosed-attributes?session_token=${session_token}&client_id=${props.clientId}`;
   if (nonce) url = `${url}&nonce=${nonce}`;
 
   const headers = props.apiKey ? { 'Authorization': `Bearer ${props.apiKey}` } : {};

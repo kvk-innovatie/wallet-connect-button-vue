@@ -26,4 +26,5 @@ export interface NLWalletButtonProps {
   onSuccess: (attributes: AttributeData | undefined) => void;
   apiKey?: string;
   walletConnectHost?: string;
+  lang?: string;
 }

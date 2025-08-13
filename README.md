@@ -47,6 +47,7 @@ const onWalletSuccess = (attributes: any) => {
 - `apiKey?: string` - Optional. API key for authentication
 - `walletConnectHost?: string` - Optional. Custom wallet connect host URL (defaults to https://wallet-connect.eu)
 - `label?: string` - Optional. Custom button text (defaults to 'Inloggen met NL Wallet')
+- `lang?: string` - Optional. Language setting for the wallet button (defaults to 'nl')
 
 ### Events
 
