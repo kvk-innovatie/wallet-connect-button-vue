@@ -102,6 +102,7 @@ const fetchDisclosedAttributes = async () => {
   } catch (err) {
     console.log(err.message);
     error.value = err.message;
+    removeSearchParam('session_token');
     loading.value = false;
   }
 };
