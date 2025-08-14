@@ -44,6 +44,7 @@ echo "✅ Successfully published version $NEW_VERSION to npm!"
 if [ -d .git ]; then
     echo "📝 Committing version bump..."
     git add package.json
+    git add package-lock.json
     git commit -m "Bump version to $NEW_VERSION"
     git tag "v$NEW_VERSION"
     
