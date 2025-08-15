@@ -98,11 +98,13 @@ const fetchDisclosedAttributes = async () => {
     console.log("Disclosed attributes:", data);
     props.onSuccess(data);
     removeSearchParam('session_token');
+    if (nonce) removeSearchParam('nonce');
     loading.value = false;
   } catch (err) {
     console.log(err.message);
     error.value = err.message;
     removeSearchParam('session_token');
+    if (nonce) removeSearchParam('nonce');
     loading.value = false;
   }
 };
