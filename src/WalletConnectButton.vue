@@ -34,7 +34,7 @@ import axios from 'axios';
 const props = defineProps({
   label: { type: String, required: false, default: 'Inloggen met NL Wallet' },
   clientId: { type: String, required: true },
-  onSuccess: { type: Function, required: true },
+  onSuccess: { type: Function, required: false },
   apiKey: { type: String, required: false },
   walletConnectHost: { type: String, required: false },
   lang: { type: String, required: false, default: 'nl' },
@@ -112,7 +112,9 @@ const fetchDisclosedAttributes = async () => {
   try {
     const { data } = await axios.get(url, { headers });
     console.log("Disclosed attributes:", data);
-    props.onSuccess(data);
+    if (props.onSuccess) {
+      props.onSuccess(data);
+    }
     removeSearchParam('session_token');
     if (nonce) removeSearchParam('nonce');
     loading.value = false;
