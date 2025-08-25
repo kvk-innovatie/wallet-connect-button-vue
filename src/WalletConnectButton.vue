@@ -17,9 +17,12 @@
     v-else
     ref="buttonRef"
     :text="props.label"
-    :usecase="clientId"
+    :usecase="props.issuance ? '' : clientId"
     :start-url="startUrl"
     :lang="props.lang"
+    :help-base-url="props.helpBaseUrl"
+    :same-device-ul="sameDeviceUl"
+    :cross-device-ul="crossDeviceUl"
   ></nl-wallet-button>
 </template>
 
@@ -34,7 +37,9 @@ const props = defineProps({
   onSuccess: { type: Function, required: true },
   apiKey: { type: String, required: false },
   walletConnectHost: { type: String, required: false },
-  lang: { type: String, required: false, default: 'nl' }
+  lang: { type: String, required: false, default: 'nl' },
+  helpBaseUrl: { type: String, required: false },
+  issuance: { type: Boolean, required: false }
 });
 
 const { searchParams, setSearchParams, removeSearchParam } = useSearchParams();
@@ -47,6 +52,17 @@ const startUrl = computed(() => {
   const returnUrl = typeof window !== 'undefined' ? window.location.href : '';
   return `${baseUrl}/api/create-session?lang=en&return_url=${encodeURIComponent(returnUrl)}`;
 });
+
+const constructURI = (session_type) => {
+  const request_uri = `https://issuance.wallet-connect.eu/disclosure/${props.clientId}/request_uri?session_type=${session_type}`;
+  const request_uri_method = "post";
+  const client_id_uri = `${props.clientId}.example.com`;
+  
+  return `walletdebuginteraction://wallet.edi.rijksoverheid.nl/disclosure_based_issuance?request_uri=${encodeURIComponent(request_uri)}&request_uri_method=${request_uri_method}&client_id=${client_id_uri}`;
+};
+
+const sameDeviceUl = computed(() => constructURI("same_device"));
+const crossDeviceUl = computed(() => constructURI("cross_device"));
 
 const handleSuccess = (e) => {
   const customEvent = e;
