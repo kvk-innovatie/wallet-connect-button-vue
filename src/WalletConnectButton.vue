@@ -31,6 +31,9 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useSearchParams } from './composables/useSearchParams';
 import axios from 'axios';
 
+// Types for credentials functionality
+const credentialsCache = new Map();
+
 const props = defineProps({
   label: { type: String, required: false, default: 'Inloggen met NL Wallet' },
   clientId: { type: String, required: true },
@@ -54,7 +57,8 @@ const startUrl = computed(() => {
 });
 
 const constructURI = (session_type) => {
-  const request_uri = `https://issuance.wallet-connect.eu/disclosure/${props.clientId}/request_uri?session_type=${session_type}`;
+  const baseHost = props.walletConnectHost || "https://issuance.wallet-connect.eu";
+  const request_uri = `${baseHost}/disclosure/${props.clientId}/request_uri?session_type=${session_type}`;
   const request_uri_method = "post";
   const client_id_uri = `${props.clientId}.example.com`;
   
@@ -63,6 +67,142 @@ const constructURI = (session_type) => {
 
 const sameDeviceUl = computed(() => constructURI("same_device"));
 const crossDeviceUl = computed(() => constructURI("cross_device"));
+
+const fetchRequestedCredentials = async () => {
+  if (!props.apiKey || !props.clientId) return [];
+  
+  const cacheKey = `${props.clientId}-${props.walletConnectHost || "default"}`;
+  
+  // Check if we already have data in cache
+  const cached = credentialsCache.get(cacheKey);
+  if (cached?.data) {
+    return cached.data;
+  }
+  
+  // Check if there's already a request in progress
+  if (cached?.promise) {
+    return await cached.promise;
+  }
+  
+  const fetchPromise = (async () => {
+    try {
+      const baseUrl = props.walletConnectHost || "https://wallet-connect.eu";
+      const url = `${baseUrl}/api/client/${props.clientId}/requested-credentials`;
+      const headers = { 'Authorization': `Bearer ${props.apiKey}` };
+      
+      const response = await axios.get(url, { headers });
+      
+      // Extract credentials from the response
+      const credentials = response.data?.data?.requestedCredentials || [];
+      
+      // Cache the result
+      credentialsCache.set(cacheKey, { data: credentials });
+      return credentials;
+    } catch (error) {
+      // Remove failed request from cache
+      credentialsCache.delete(cacheKey);
+      throw error;
+    }
+  })();
+  
+  // Cache the promise to prevent duplicate requests
+  credentialsCache.set(cacheKey, { promise: fetchPromise });
+  
+  return await fetchPromise;
+};
+
+const injectCredentialsIntoShadowDOM = (credentials, retryCount = 0) => {
+  const maxRetries = 10;
+  const walletButton = buttonRef.value;
+  
+  if (!walletButton || !walletButton.shadowRoot) {
+    return;
+  }
+
+  // Remove any existing credential info
+  const existingCredentials = walletButton.shadowRoot.querySelector('.required-credentials');
+  if (existingCredentials) {
+    existingCredentials.remove();
+  }
+
+  if (credentials.length === 0) return;
+
+  // Look for the modal and website section
+  const modal = walletButton.shadowRoot.querySelector('.modal');
+  if (!modal) {
+    // Retry if modal not found yet
+    if (retryCount < maxRetries) {
+      setTimeout(() => {
+        injectCredentialsIntoShadowDOM(credentials, retryCount + 1);
+      }, 200);
+      return;
+    }
+    return;
+  }
+
+  const websiteSection = modal.querySelector('.website');
+
+  // Determine language and translations
+  const isNL = props.lang === 'nl';
+  const headerText = isNL ? 'Benodigde Attestaties:' : 'Required Credentials:';
+  const getLinkText = isNL ? '→ Verkrijg attestatie' : '→ Get credential';
+
+  // Create credential info element
+  const credentialsDiv = document.createElement('div');
+  credentialsDiv.className = 'required-credentials';
+  credentialsDiv.innerHTML = `
+    <div style="
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.4;
+    ">
+      <div style="margin: 0 0 8px 0; color: #212529; font-size: 14px; font-weight: 600;">${headerText}</div>
+      ${credentials.map(credential => {
+        const credentialName = isNL ? credential.credentialName.nl : credential.credentialName.en;
+        return `
+          <div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span style="color: #495057; font-weight: 500;">${credentialName}</span>
+            ${credential.websiteUrl ? `
+              <a href="${credential.websiteUrl}" target="_blank" rel="noopener noreferrer" style="
+                color: #0066cc;
+                text-decoration: none;
+                font-size: 12px;
+                white-space: nowrap;
+              ">${getLinkText}</a>
+            ` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  // Insert the credentials div after the website section
+  if (websiteSection) {
+    websiteSection.insertAdjacentElement('afterend', credentialsDiv);
+  } else {
+    // Fallback: insert at the beginning of modal
+    modal.insertBefore(credentialsDiv, modal.firstChild);
+  }
+};
+
+const handleButtonClick = async (_event) => {
+  try {
+    const credentials = await fetchRequestedCredentials();
+    
+    if (credentials && credentials.length > 0) {
+      // Inject credentials into the shadow DOM with multiple attempts
+      setTimeout(() => {
+        injectCredentialsIntoShadowDOM(credentials);
+      }, 100);
+    }
+  } catch (error) {
+    console.error('Failed to fetch credentials:', error);
+  }
+};
 
 const handleSuccess = (e) => {
   const customEvent = e;
@@ -90,6 +230,7 @@ const loadWebComponent = async () => {
     if (button) {
       button.addEventListener("success", handleSuccess);
       button.addEventListener("failed", handleFailed);
+      button.addEventListener("click", handleButtonClick);
     }
   } catch (error) {
     console.warn('Could not load nl-wallet-web.js:', error);
@@ -137,6 +278,7 @@ onUnmounted(() => {
   if (button) {
     button.removeEventListener("success", handleSuccess);
     button.removeEventListener("failed", handleFailed);
+    button.removeEventListener("click", handleButtonClick);
   }
 });
 
