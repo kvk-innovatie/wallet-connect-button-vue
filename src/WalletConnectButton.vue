@@ -39,7 +39,8 @@ const props = defineProps({
   clientId: { type: String, required: true },
   onSuccess: { type: Function, required: false },
   apiKey: { type: String, required: false },
-  walletConnectHost: { type: String, required: false },
+  useLocalWcServer: { type: Boolean, required: false, default: false },
+  business: { type: Boolean, required: false, default: false },
   lang: { type: String, required: false, default: 'nl' },
   helpBaseUrl: { type: String, required: false },
   issuance: { type: Boolean, required: false }
@@ -50,19 +51,42 @@ const loading = ref(false);
 const error = ref(null);
 const buttonRef = ref(null);
 
+const getDefaultHost = () => {
+  // If useLocalWcServer is set, use local server
+  if (props.useLocalWcServer) {
+    if (props.business) {
+      return props.issuance ? 'http://localhost:4007' : 'http://bw.localhost:3021';
+    }
+
+    return props.issuance ? 'http://localhost:3007' : 'http://localhost:3021';
+  }
+
+  // Otherwise use remote servers
+  if (props.business) {
+    return props.issuance ? 'https://bw.issuance.wallet-connect.eu' : 'https://bw.wallet-connect.eu';
+  }
+
+  return props.issuance ? 'https://issuance.wallet-connect.eu' : 'https://wallet-connect.eu';
+};
+
 const startUrl = computed(() => {
-  const baseUrl = props.walletConnectHost || 'https://wallet-connect.eu';
+  const baseUrl = getDefaultHost();
   const returnUrl = typeof window !== 'undefined' ? window.location.href : '';
   return `${baseUrl}/api/create-session?lang=en&return_url=${encodeURIComponent(returnUrl)}`;
 });
 
 const constructURI = (session_type) => {
-  const baseHost = props.walletConnectHost || "https://issuance.wallet-connect.eu";
-  const request_uri = `${baseHost}/disclosure/${props.clientId}/request_uri?session_type=${session_type}`;
+  const request_uri = `${getDefaultHost()}/disclosure/${props.clientId}/request_uri?session_type=${session_type}`;
   const request_uri_method = "post";
   const client_id_uri = `${props.clientId}.example.com`;
-  
-  return `walletdebuginteraction://wallet.edi.rijksoverheid.nl/disclosure_based_issuance?request_uri=${encodeURIComponent(request_uri)}&request_uri_method=${request_uri_method}&client_id=${client_id_uri}`;
+
+  const deepLinkScheme = props.business
+    ? 'businesswalletdebuginteraction://wallet.kvk.rijksoverheid.nl'
+    : 'walletdebuginteraction://wallet.edi.rijksoverheid.nl';
+
+  return `${deepLinkScheme}/disclosure_based_issuance?request_uri=${encodeURIComponent(
+    request_uri
+  )}&request_uri_method=${request_uri_method}&client_id=${client_id_uri}`;
 };
 
 const sameDeviceUl = computed(() => constructURI("same_device"));
@@ -70,31 +94,31 @@ const crossDeviceUl = computed(() => constructURI("cross_device"));
 
 const fetchRequestedCredentials = async () => {
   if (!props.apiKey || !props.clientId) return [];
-  
-  const cacheKey = `${props.clientId}-${props.walletConnectHost || "default"}`;
-  
+
+  const cacheKey = `${props.clientId}-${getDefaultHost()}`;
+
   // Check if we already have data in cache
   const cached = credentialsCache.get(cacheKey);
   if (cached?.data) {
     return cached.data;
   }
-  
+
   // Check if there's already a request in progress
   if (cached?.promise) {
     return await cached.promise;
   }
-  
+
   const fetchPromise = (async () => {
     try {
-      const baseUrl = props.walletConnectHost || "https://wallet-connect.eu";
+      const baseUrl = getDefaultHost();
       const url = `${baseUrl}/api/client/${props.clientId}/requested-credentials`;
       const headers = { 'Authorization': `Bearer ${props.apiKey}` };
-      
+
       const response = await axios.get(url, { headers });
-      
+
       // Extract credentials from the response
       const credentials = response.data?.data?.requestedCredentials || [];
-      
+
       // Cache the result
       credentialsCache.set(cacheKey, { data: credentials });
       return credentials;
@@ -104,10 +128,10 @@ const fetchRequestedCredentials = async () => {
       throw error;
     }
   })();
-  
+
   // Cache the promise to prevent duplicate requests
   credentialsCache.set(cacheKey, { promise: fetchPromise });
-  
+
   return await fetchPromise;
 };
 
@@ -244,12 +268,12 @@ const fetchDisclosedAttributes = async () => {
   if (!session_token) return;
 
   loading.value = true;
-  const baseUrl = props.apiKey ? (props.walletConnectHost || "https://wallet-connect.eu") : "";
+  const baseUrl = props.apiKey ? getDefaultHost() : "";
   let url = baseUrl + `/api/disclosed-attributes?session_token=${session_token}&client_id=${props.clientId}`;
   if (nonce) url = `${url}&nonce=${nonce}`;
 
   const headers = props.apiKey ? { 'Authorization': `Bearer ${props.apiKey}` } : {};
-  
+
   try {
     const { data } = await axios.get(url, { headers });
     console.log("Disclosed attributes:", data);
