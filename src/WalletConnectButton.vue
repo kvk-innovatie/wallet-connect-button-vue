@@ -23,6 +23,7 @@
     :help-base-url="props.helpBaseUrl"
     :same-device-ul="sameDeviceUl"
     :cross-device-ul="crossDeviceUl"
+    :business="props.business"
   ></nl-wallet-button>
 </template>
 
