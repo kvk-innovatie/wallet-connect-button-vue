@@ -56,10 +56,10 @@ const getDefaultHost = () => {
   // If useLocalWcServer is set, use local server
   if (props.useLocalWcServer) {
     if (props.business) {
-      return props.issuance ? 'http://localhost:4007' : 'http://bw.localhost:3021';
+      return props.issuance ? 'http://localhost:5017' : 'http://bw.localhost:5021';
     }
 
-    return props.issuance ? 'http://localhost:3007' : 'http://localhost:3021';
+    return props.issuance ? 'http://localhost:5007' : 'http://localhost:5021';
   }
 
   // Otherwise use remote servers
@@ -71,15 +71,15 @@ const getDefaultHost = () => {
 };
 
 const startUrl = computed(() => {
-  const baseUrl = getDefaultHost();
+  const startHost = props.apiKey ? getDefaultHost() : '';
   const returnUrl = typeof window !== 'undefined' ? window.location.href : '';
-  return `${baseUrl}/api/create-session?lang=en&return_url=${encodeURIComponent(returnUrl)}`;
+  return `${startHost}/api/create-session?lang=en&return_url=${encodeURIComponent(returnUrl)}`;
 });
 
 const constructURI = (session_type) => {
   const request_uri = `${getDefaultHost()}/disclosure/${props.clientId}/request_uri?session_type=${session_type}`;
   const request_uri_method = "post";
-  const client_id_uri = `${props.clientId}.example.com`;
+  const client_id_uri = `x509_san_dns:${new URL(getDefaultHost()).hostname}`;
 
   const deepLinkScheme = props.business
     ? 'businesswalletdebuginteraction://wallet.kvk.rijksoverheid.nl'
