@@ -24,6 +24,7 @@
     :same-device-ul="sameDeviceUl"
     :cross-device-ul="crossDeviceUl"
     :business="props.business || undefined"
+    :over18="props.over18 || undefined"
   ></nl-wallet-button>
 </template>
 
@@ -44,7 +45,8 @@ const props = defineProps({
   business: { type: Boolean, required: false, default: false },
   lang: { type: String, required: false, default: 'nl' },
   helpBaseUrl: { type: String, required: false },
-  issuance: { type: Boolean, required: false }
+  issuance: { type: Boolean, required: false },
+  over18: { type: Boolean, required: false, default: false }
 });
 
 const { searchParams, setSearchParams, removeSearchParam } = useSearchParams();
