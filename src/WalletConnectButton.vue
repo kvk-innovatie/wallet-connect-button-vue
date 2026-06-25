@@ -84,7 +84,7 @@ const constructURI = (session_type) => {
   const client_id_uri = `x509_san_dns:${new URL(getDefaultHost()).hostname}`;
 
   const deepLinkScheme = props.business
-    ? 'businesswalletdebuginteraction://wallet.kvk.rijksoverheid.nl'
+    ? 'businesswalletdebuginteraction://ebwallet.org'
     : 'walletdebuginteraction://wallet.edi.rijksoverheid.nl';
 
   return `${deepLinkScheme}/disclosure_based_issuance?request_uri=${encodeURIComponent(
