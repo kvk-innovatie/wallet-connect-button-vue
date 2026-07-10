@@ -1,6 +1,6 @@
 # wallet-connect-button-vue
 
-A Vue 3 component for NL Wallet integration.
+A Vue 3 component for NP Wallet integration.
 
 ## Installation
 
@@ -46,7 +46,7 @@ const onWalletSuccess = (attributes: any) => {
 - `clientId: string` - Required. Your client ID for wallet connection
 - `apiKey?: string` - Optional. API key for authentication
 - `walletConnectHost?: string` - Optional. Custom wallet connect host URL (defaults to https://wallet-connect.eu)
-- `label?: string` - Optional. Custom button text (defaults to 'Inloggen met NL Wallet')
+- `label?: string` - Optional. Custom button text (defaults to 'Inloggen met NP Wallet')
 - `lang?: string` - Optional. Language setting for the wallet button (defaults to 'nl')
 
 ### Events

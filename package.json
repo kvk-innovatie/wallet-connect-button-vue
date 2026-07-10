@@ -1,7 +1,7 @@
 {
   "name": "wallet-connect-button-vue",
   "version": "1.0.19",
-  "description": "A Vue 3 component for NL Wallet integration",
+  "description": "A Vue 3 component for NP Wallet integration",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

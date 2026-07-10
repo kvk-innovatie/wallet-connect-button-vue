@@ -37,7 +37,7 @@ import axios from 'axios';
 const credentialsCache = new Map();
 
 const props = defineProps({
-  label: { type: String, required: false, default: 'Inloggen met NL Wallet' },
+  label: { type: String, required: false, default: 'Inloggen met NP Wallet' },
   clientId: { type: String, required: true },
   onSuccess: { type: Function, required: false },
   apiKey: { type: String, required: false },
