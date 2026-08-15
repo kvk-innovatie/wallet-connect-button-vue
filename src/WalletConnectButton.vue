@@ -25,6 +25,7 @@
     :cross-device-ul="crossDeviceUl"
     :business="props.business || undefined"
     :over18="props.over18 || undefined"
+    :nbwallet="props.nbwallet || undefined"
   ></nl-wallet-button>
 </template>
 
@@ -46,7 +47,8 @@ const props = defineProps({
   lang: { type: String, required: false, default: 'nl' },
   helpBaseUrl: { type: String, required: false },
   issuance: { type: Boolean, required: false },
-  over18: { type: Boolean, required: false, default: false }
+  over18: { type: Boolean, required: false, default: false },
+  nbwallet: { type: Boolean, required: false, default: false }
 });
 
 const { searchParams, setSearchParams, removeSearchParam } = useSearchParams();
@@ -55,6 +57,10 @@ const error = ref(null);
 const buttonRef = ref(null);
 
 const getDefaultHost = () => {
+  if (props.nbwallet) {
+    return props.useLocalWcServer ? 'http://localhost:9070' : 'https://nbwallet.org/wc';
+  }
+
   // If useLocalWcServer is set, use local server
   if (props.useLocalWcServer) {
     if (props.business) {
@@ -83,7 +89,9 @@ const constructURI = (session_type) => {
   const request_uri_method = "post";
   const client_id_uri = `x509_san_dns:${new URL(getDefaultHost()).hostname}`;
 
-  const deepLinkScheme = props.business
+  const deepLinkScheme = props.nbwallet
+    ? 'businesswalletdebuginteraction://nbwallet.org'
+    : props.business
     ? 'businesswalletdebuginteraction://ebwallet.org'
     : 'walletdebuginteraction://wallet.edi.rijksoverheid.nl';
 
@@ -92,8 +100,8 @@ const constructURI = (session_type) => {
   )}&request_uri_method=${request_uri_method}&client_id=${client_id_uri}`;
 };
 
-const sameDeviceUl = computed(() => constructURI("same_device"));
-const crossDeviceUl = computed(() => constructURI("cross_device"));
+const sameDeviceUl = computed(() => props.nbwallet ? undefined : constructURI("same_device"));
+const crossDeviceUl = computed(() => props.nbwallet ? undefined : constructURI("cross_device"));
 
 const fetchRequestedCredentials = async () => {
   if (!props.apiKey || !props.clientId) return [];
