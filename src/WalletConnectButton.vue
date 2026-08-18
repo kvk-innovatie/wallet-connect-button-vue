@@ -58,7 +58,7 @@ const buttonRef = ref(null);
 
 const getDefaultHost = () => {
   if (props.nbwallet) {
-    return props.useLocalWcServer ? 'http://localhost:9070' : 'https://nbwallet.org/wc';
+    return props.useLocalWcServer ? 'http://localhost:9070' : 'https://wc.nbwallet.org';
   }
 
   // If useLocalWcServer is set, use local server
