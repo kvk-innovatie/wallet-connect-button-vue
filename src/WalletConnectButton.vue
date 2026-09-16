@@ -20,7 +20,7 @@
     :usecase="props.issuance ? '' : clientId"
     :start-url="startUrl"
     :lang="props.lang"
-    :help-base-url="props.helpBaseUrl"
+    :help-base-url="resolvedHelpBaseUrl"
     :same-device-ul="sameDeviceUl"
     :cross-device-ul="crossDeviceUl"
     :business="props.business || undefined"
@@ -57,8 +57,13 @@ const error = ref(null);
 const buttonRef = ref(null);
 
 const getDefaultHost = () => {
+  // NB Wallet: nb-wallet-connect (connect.nbwallet.org); the issuance
+  // server has its own host.
   if (props.nbwallet) {
-    return props.useLocalWcServer ? 'http://localhost:9070' : 'https://wc.nbwallet.org';
+    if (props.useLocalWcServer) {
+      return props.issuance ? 'http://localhost:5017' : 'http://localhost:5021';
+    }
+    return props.issuance ? 'https://issuance.connect.nbwallet.org' : 'https://connect.nbwallet.org';
   }
 
   // If useLocalWcServer is set, use local server
@@ -100,8 +105,22 @@ const constructURI = (session_type) => {
   )}&request_uri_method=${request_uri_method}&client_id=${client_id_uri}`;
 };
 
-const sameDeviceUl = computed(() => props.nbwallet ? undefined : constructURI("same_device"));
-const crossDeviceUl = computed(() => props.nbwallet ? undefined : constructURI("cross_device"));
+// Disclosure uses the dynamic strategy — the modal creates the session and the
+// status response carries the universal link — so only issuance needs the
+// static same/cross-device links.
+const useStaticLinks = computed(() => props.issuance);
+const sameDeviceUl = computed(() => useStaticLinks.value ? constructURI("same_device") : undefined);
+const crossDeviceUl = computed(() => useStaticLinks.value ? constructURI("cross_device") : undefined);
+
+// Per-wallet-type help-base-url. An explicit helpBaseUrl prop wins; otherwise
+// fall back to the wallet's own help page (NP Wallet by default).
+const resolvedHelpBaseUrl = computed(() => {
+  if (props.helpBaseUrl) return props.helpBaseUrl;
+  if (props.nbwallet) return 'https://nbwallet.org/download';
+  if (props.over18) return 'https://18up.eu/nl/install/';
+  if (props.business) return 'https://ebwallet.org/download';
+  return 'https://npwallet.org/';
+});
 
 const fetchRequestedCredentials = async () => {
   if (!props.apiKey || !props.clientId) return [];
