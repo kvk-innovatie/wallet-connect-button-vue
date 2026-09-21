@@ -18,6 +18,7 @@
     ref="buttonRef"
     :text="props.label"
     :usecase="props.issuance ? '' : clientId"
+    :client-id="clientId"
     :start-url="startUrl"
     :lang="props.lang"
     :help-base-url="resolvedHelpBaseUrl"
@@ -95,7 +96,7 @@ const constructURI = (session_type) => {
   const client_id_uri = `x509_san_dns:${new URL(getDefaultHost()).hostname}`;
 
   const deepLinkScheme = props.nbwallet
-    ? 'businesswalletdebuginteraction://nbwallet.org'
+    ? 'https://nbwallet.org/deeplink'
     : props.business
     ? 'businesswalletdebuginteraction://ebwallet.org'
     : 'walletdebuginteraction://wallet.edi.rijksoverheid.nl';

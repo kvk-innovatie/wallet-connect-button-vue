@@ -54,3 +54,9 @@ const onWalletSuccess = (attributes: any) => {
 - `success` - Emitted when wallet connection succeeds
 
 For further explanation and documentation, visit: https://wallet-connect.eu
+
+## Changes
+
+### 1.0.25
+- Pass the `clientId` prop through to the embedded `<nl-wallet-button>` as `client-id`, so the "No app yet?" link under the QR code becomes `<help-base-url>?client_id=<clientId>` (employee onboarding hand-off).
+- NB Wallet (`nbwallet`) issuance deep links now use the https universal link base `https://nbwallet.org/deeplink/...` instead of the custom `businesswalletdebuginteraction://` scheme. Business Wallet and NL Wallet links are unchanged.
