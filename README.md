@@ -21,7 +21,7 @@ import { WalletConnectButton } from 'wallet-connect-button-vue';
 ```vue
 <template>
   <WalletConnectButton 
-    :client-id="'your-client-id'" 
+    :service-id="'your-service-id'" 
     :api-key="'your-api-key'"
     :wallet-connect-host="'https://wallet-connect.eu'"
     :label="'Connect Wallet'"
@@ -43,7 +43,15 @@ const onWalletSuccess = (attributes: any) => {
 
 ### Props
 
-- `clientId: string` - Required. Your client ID for wallet connection
+- `serviceId: string` - The registration's identifier. NB Wallet Connect calls it a
+  **service id**: one company registers a service per website or application.
+- `clientId: string` - The original name for the same value, still fully supported.
+  Give either one; `serviceId` wins when both are set.
+
+With the `nbwallet` attribute the button talks to NB Wallet Connect, which has renamed
+this identifier throughout its API (`service_id`, `/api/service/...`). Every other
+variant still calls its host with `client_id`. That switch is automatic; you only
+choose which prop name to write.
 - `apiKey?: string` - Optional. API key for authentication
 - `walletConnectHost?: string` - Optional. Custom wallet connect host URL (defaults to https://wallet-connect.eu)
 - `label?: string` - Optional. Custom button text (defaults to 'Inloggen met NP Wallet')

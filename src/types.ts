@@ -22,7 +22,10 @@ export interface DisclosedAttributesResponse {
 
 export interface NLWalletButtonProps {
   label?: string;
-  clientId: string;
+  /** Current name for the registration's identifier; wins over `clientId`. */
+  serviceId?: string;
+  /** @deprecated Use `serviceId`. Still fully supported. */
+  clientId?: string;
   onSuccess: (attributes: AttributeData | undefined) => void;
   apiKey?: string;
   walletConnectHost?: string;

@@ -13,12 +13,15 @@
     </div>
   </div>
 
+  <!-- The inner button is a vendored wallet_web build: older copies know only
+       client-id, newer ones prefer service-id. Both carry the same value. -->
   <nl-wallet-button
     v-else
     ref="buttonRef"
     :text="props.label"
     :usecase="props.issuance ? '' : clientId"
     :client-id="clientId"
+    :service-id="clientId"
     :start-url="startUrl"
     :lang="props.lang"
     :help-base-url="resolvedHelpBaseUrl"
@@ -40,7 +43,11 @@ const credentialsCache = new Map();
 
 const props = defineProps({
   label: { type: String, required: false, default: 'Inloggen met NP Wallet' },
-  clientId: { type: String, required: true },
+  // Two names for the same value: `serviceId` is current (NB Wallet Connect
+  // calls it a service id), `clientId` is the original and still works.
+  // `serviceId` wins when both are given.
+  serviceId: { type: String, required: false },
+  clientId: { type: String, required: false },
   onSuccess: { type: Function, required: false },
   apiKey: { type: String, required: false },
   useLocalWcServer: { type: Boolean, required: false, default: false },
@@ -51,6 +58,13 @@ const props = defineProps({
   over18: { type: Boolean, required: false, default: false },
   nbwallet: { type: Boolean, required: false, default: false }
 });
+
+// `serviceId` and `clientId` are two names for the same value.
+const clientId = computed(() => props.serviceId ?? props.clientId ?? '');
+// NB Wallet Connect renamed the identifier to "service id" across its API;
+// the other wallet-connect hosts still speak client id.
+const idParam = computed(() => (props.nbwallet ? 'service_id' : 'client_id'));
+const idPath = computed(() => (props.nbwallet ? 'service' : 'client'));
 
 const { searchParams, setSearchParams, removeSearchParam } = useSearchParams();
 const loading = ref(false);
@@ -91,7 +105,7 @@ const startUrl = computed(() => {
 });
 
 const constructURI = (session_type) => {
-  const request_uri = `${getDefaultHost()}/disclosure/${props.clientId}/request_uri?session_type=${session_type}`;
+  const request_uri = `${getDefaultHost()}/disclosure/${clientId.value}/request_uri?session_type=${session_type}`;
   const request_uri_method = "post";
   const client_id_uri = `x509_san_dns:${new URL(getDefaultHost()).hostname}`;
 
@@ -124,9 +138,9 @@ const resolvedHelpBaseUrl = computed(() => {
 });
 
 const fetchRequestedCredentials = async () => {
-  if (!props.apiKey || !props.clientId) return [];
+  if (!props.apiKey || !clientId.value) return [];
 
-  const cacheKey = `${props.clientId}-${getDefaultHost()}`;
+  const cacheKey = `${clientId.value}-${getDefaultHost()}`;
 
   // Check if we already have data in cache
   const cached = credentialsCache.get(cacheKey);
@@ -142,7 +156,7 @@ const fetchRequestedCredentials = async () => {
   const fetchPromise = (async () => {
     try {
       const baseUrl = getDefaultHost();
-      const url = `${baseUrl}/api/client/${props.clientId}/requested-credentials`;
+      const url = `${baseUrl}/api/${idPath.value}/${clientId.value}/requested-credentials`;
       const headers = { 'Authorization': `Bearer ${props.apiKey}` };
 
       const response = await axios.get(url, { headers });
@@ -300,7 +314,7 @@ const fetchDisclosedAttributes = async () => {
 
   loading.value = true;
   const baseUrl = props.apiKey ? getDefaultHost() : "";
-  let url = baseUrl + `/api/disclosed-attributes?session_token=${session_token}&client_id=${props.clientId}`;
+  let url = baseUrl + `/api/disclosed-attributes?session_token=${session_token}&${idParam.value}=${clientId.value}`;
   if (nonce) url = `${url}&nonce=${nonce}`;
 
   const headers = props.apiKey ? { 'Authorization': `Bearer ${props.apiKey}` } : {};
