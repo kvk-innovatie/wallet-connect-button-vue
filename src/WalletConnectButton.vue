@@ -30,6 +30,7 @@
     :business="props.business || undefined"
     :over18="props.over18 || undefined"
     :nbwallet="props.nbwallet || undefined"
+    :issuance="props.issuance || undefined"
   ></nl-wallet-button>
 </template>
 
