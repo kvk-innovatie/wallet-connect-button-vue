@@ -57,8 +57,43 @@ const props = defineProps({
   helpBaseUrl: { type: String, required: false },
   issuance: { type: Boolean, required: false },
   over18: { type: Boolean, required: false, default: false },
-  nbwallet: { type: Boolean, required: false, default: false }
+  nbwallet: { type: Boolean, required: false, default: false },
+  // Where the wallet app sends the user after a same-device disclosure; the
+  // verifier appends `session_token` to it. Defaults to the address of the
+  // document the button lives in, which is wrong inside an iframe: set it to
+  // the page that contains the iframe, and have that page hand the token to
+  // the iframe (see "Embedding in an iframe" in the README).
+  returnUrl: { type: String, required: false }
 });
+
+// `type` of the message a host page posts into the iframe to hand over a finished session.
+const SESSION_MESSAGE_TYPE = 'wallet-connect-session';
+
+// The full return URL: the explicit one resolved against this document, else this document.
+const resolvedReturnUrl = computed(() => {
+  if (typeof window === 'undefined') return '';
+  return props.returnUrl ? new URL(props.returnUrl, window.location.href).toString() : window.location.href;
+});
+
+// The session token and nonce out of a host page's message, or null when the
+// event is not such a message. Only the page the wallet returns to may hand
+// over a token, so the sender's origin must be the return URL's origin.
+const sessionFromMessage = (event) => {
+  const data = event.data;
+  if (!data || typeof data !== 'object' || data.type !== SESSION_MESSAGE_TYPE) return null;
+  if (typeof data.session_token !== 'string' || data.session_token === '') return null;
+  if (!resolvedReturnUrl.value || event.origin !== new URL(resolvedReturnUrl.value).origin) return null;
+  return { session_token: data.session_token, nonce: typeof data.nonce === 'string' ? data.nonce : undefined };
+};
+
+// Inside an iframe the wallet returns to the host page, not to this document.
+// The host page hands the token over by posting it in; from there on it is
+// handled exactly like a token in this document's own query string.
+const handleMessage = (event) => {
+  const session = sessionFromMessage(event);
+  if (!session) return;
+  setSearchParams(session.nonce ? session : { session_token: session.session_token });
+};
 
 // `serviceId` and `clientId` are two names for the same value.
 const clientId = computed(() => props.serviceId ?? props.clientId ?? '');
@@ -101,8 +136,7 @@ const getDefaultHost = () => {
 
 const startUrl = computed(() => {
   const startHost = props.apiKey ? getDefaultHost() : '';
-  const returnUrl = typeof window !== 'undefined' ? window.location.href : '';
-  return `${startHost}/api/create-session?lang=en&return_url=${encodeURIComponent(returnUrl)}`;
+  return `${startHost}/api/create-session?lang=en&return_url=${encodeURIComponent(resolvedReturnUrl.value)}`;
 });
 
 const constructURI = (session_type) => {
@@ -339,11 +373,13 @@ const fetchDisclosedAttributes = async () => {
 };
 
 onMounted(() => {
+  window.addEventListener('message', handleMessage);
   loadWebComponent();
   fetchDisclosedAttributes();
 });
 
 onUnmounted(() => {
+  window.removeEventListener('message', handleMessage);
   const button = buttonRef.value;
   if (button) {
     button.removeEventListener("success", handleSuccess);
