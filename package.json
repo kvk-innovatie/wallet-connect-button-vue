@@ -1,6 +1,6 @@
 {
   "name": "wallet-connect-button-vue",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "description": "A Vue 3 component for NP Wallet integration",
   "type": "module",
   "main": "dist/index.js",
