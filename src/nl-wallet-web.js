@@ -7357,7 +7357,7 @@ const rh = (e, t) => {
       le(Hr, { helpBaseUrl: e.helpBaseUrl }, null, 8, ["helpBaseUrl"])
     ], 64));
   }
-}), mh = "https://apps.apple.com/nl/app/nb-wallet/id6802341522", gh = "https://play.google.com/store/apps/details?id=org.nbwallet.wallet", yh = (e, t) => ({
+}), mh = "https://apps.apple.com/nl/app/zzp-garantie/id6828780267", gh = "https://play.google.com/store/apps/details?id=org.nbwallet.wallet", yh = (e, t) => ({
   service_id: e,
   role: t
 }), bh = (e) => {
